@@ -11,6 +11,7 @@ const Header = () => {
         <nav className="space-x-4">
           <Link to="/" className="hover:text-blue-400">Home</Link>
           <Link to="/gallery" className="hover:text-blue-400">Gallery</Link>
+          <Link to="/roof-gallery" className="hover:text-blue-400">Projects</Link>
         </nav>
       </div>
     </header>
