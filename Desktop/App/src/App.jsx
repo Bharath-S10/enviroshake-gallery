@@ -2,7 +2,8 @@ import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import GalleryPage from './pages/GalleryPage'
-import ProductDetail from './pages/ProductDetail' // ✅ import the new page
+import RoofGallery from './pages/RoofGallery'
+import ProductDetail from './pages/ProductDetail'
 
 function App() {
   return (
@@ -17,7 +18,8 @@ function App() {
             </>
           } />
           <Route path="/gallery" element={<GalleryPage />} />
-          <Route path="/product/:id" element={<ProductDetail />} /> {/* ✅ ADD THIS LINE */}
+          <Route path="/roof-gallery" element={<RoofGallery />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
         </Routes>
       </main>
     </>
