@@ -3,63 +3,41 @@ import Login from "./pages/Login";
 import GalleryPage from "./pages/GalleryPage";
 import ImageUpload from "./components/ImageUpload";
 import ProtectedRoute from "./components/ProtectedRoute";
-import LogoutButton from "./components/LogoutButton";
-import DashboardPage from "./pages/DashboardPage"; // ✅ Import the new page
+import DashboardPage from "./pages/DashboardPage";
 
 function App() {
   return (
     <Routes>
-      {/* Login Route */}
       <Route path="/login" element={<Login />} />
-
-      {/* Dashboard Route with two buttons */}
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <>
-              <LogoutButton />
-              <DashboardPage />
-            </>
+            <DashboardPage />
           </ProtectedRoute>
         }
       />
-
-      {/* My Uploaded Images Route */}
       <Route
         path="/gallery"
         element={
           <ProtectedRoute>
-            <>
-              <LogoutButton />
-              <GalleryPage />
-            </>
+            <GalleryPage />
           </ProtectedRoute>
         }
       />
-
-      {/* Upload Image Route */}
       <Route
         path="/upload"
         element={
           <ProtectedRoute>
-            <>
-              <LogoutButton />
-              <ImageUpload />
-            </>
+            <ImageUpload />
           </ProtectedRoute>
         }
       />
-
-      {/* Default Route → Redirect to Dashboard (you can change to /login if preferred) */}
       <Route
         path="/"
         element={
           <ProtectedRoute>
-            <>
-              <LogoutButton />
-              <DashboardPage />
-            </>
+            <DashboardPage />
           </ProtectedRoute>
         }
       />
