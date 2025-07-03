@@ -46,6 +46,8 @@ export default function GalleryPage() {
   const [editingGroupId, setEditingGroupId] = useState(null);
   const [newGroupName, setNewGroupName] = useState("");
   const [expandedGroupId, setExpandedGroupId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -114,7 +116,9 @@ export default function GalleryPage() {
     acc[key].push(img);
     return acc;
   }, {});
-  const groupIds = Object.keys(grouped);
+  const allGroupIds = Object.keys(grouped);
+  const totalPages = Math.ceil(allGroupIds.length / pageSize);
+  const paginatedGroupIds = allGroupIds.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const makeOptions = (arr) => arr.map(item => ({ label: item, value: item }));
 
@@ -151,151 +155,89 @@ export default function GalleryPage() {
   };
 
   return (
-    <div style={{ paddingBottom: "3rem" }}>
-      {/* NAVBAR */}
-      <div style={{
-        width: "100%",
-        backgroundColor: "#09713c",
-        color: "white",
-        padding: "1rem 2rem",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        position: "sticky",
-        top: 0,
-        zIndex: 1000,
-        boxSizing: "border-box"
-      }}>
-        <h2 style={{
-          margin: 0,
-          fontSize: "1.5rem",
-          fontWeight: "bold",
-          flexGrow: 1,
-          textAlign: "center"
-        }}>
-          Photo Gallery
-        </h2>
-        <button
-          onClick={() => auth.signOut()}
-          style={{
-            background: "white",
-            color: "#09713c",
-            border: "none",
-            padding: "0.4rem 0.8rem",
-            borderRadius: "4px",
-            fontWeight: "bold",
-            cursor: "pointer"
-          }}
-        >
-          Logout
-        </button>
-      </div>
-
-      {/* FILTERS */}
-      <div style={{ margin: "2rem 0", textAlign: "center" }}>
-        <button onClick={clearAllFilters} style={{
-          padding: "0.5rem 1rem",
-          borderRadius: "6px",
-          fontWeight: "bold",
-          border: "none",
-          backgroundColor: "#f3f3f3"
-        }}>Clear Filters</button>
-      </div>
-
-      <div style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "1rem",
-        justifyContent: "center",
-        marginBottom: "2rem",
-        width: "100%",
-        padding: "0 2rem",
-        boxSizing: "border-box"
-      }}>
-        <Select isMulti placeholder="Filter by Product Line" options={makeOptions(OPTIONS.productLines)} value={productLineFilter} onChange={setProductLineFilter} />
-        <Select isMulti placeholder="Filter by Colors" options={makeOptions(COLOR_OPTIONS)} value={colorFilter} onChange={setColorFilter} />
-        <Select isMulti placeholder="Filter by Roof Tags" options={makeOptions(OPTIONS.roofTags)} value={roofTagFilter} onChange={setRoofTagFilter} />
-        <Select isMulti placeholder="Filter by Project Type" options={makeOptions(OPTIONS.projectTypes)} value={projectTypeFilter} onChange={setProjectTypeFilter} />
-        <Select isMulti placeholder="Filter by Country" options={makeOptions(OPTIONS.countries)} value={countryFilter} onChange={setCountryFilter} />
-        <Select placeholder="Filter by Group ID" options={groupIds.map(id => ({ value: id, label: id }))} value={groupFilter ? { value: groupFilter, label: groupFilter } : null} onChange={(opt) => setGroupFilter(opt ? opt.value : "")} isClearable />
-      </div>
-
-      {/* IMAGE DISPLAY */}
-      <div style={{ width: "100%", padding: "0 2rem", boxSizing: "border-box" }}>
-        {groupIds.map((groupId) => {
-          const groupImages = grouped[groupId];
-          const firstImage = groupImages[0];
-          const isGrouped = !!firstImage.groupId;
-          const isExpanded = expandedGroupId === groupId;
-
-          return (
-            <div key={groupId} style={{ marginBottom: "2rem", border: "1px solid #ccc", padding: "1rem", borderRadius: "8px" }}>
-              <h3>{isGrouped ? groups[groupId]?.groupName || groupId : "Single Image"}</h3>
-              {isGrouped ? (
-                <div
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setExpandedGroupId(isExpanded ? null : groupId)}
-                >
-                  <img
-                    src={`${BUCKET_URL}/${firstImage.s3Key}`}
-                    alt="Thumbnail"
-                    style={{ width: "220px", borderRadius: "8px" }}
-                  />
-                  <div><strong>Click to view all images</strong></div>
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-                  <div key={firstImage.id} style={{ width: "220px", textAlign: "center", border: "1px solid #ccc", padding: "0.5rem", borderRadius: "8px" }}>
-                    <img
-                      src={`${BUCKET_URL}/${firstImage.s3Key}`}
-                      alt="Uploaded"
-                      onClick={() => setSelectedImage(`${BUCKET_URL}/${firstImage.s3Key}`)}
-                      style={{ width: "100%", borderRadius: "6px", cursor: "zoom-in" }}
-                    />
-                    <div><strong>Colors:</strong> {(firstImage.colors || []).join(", ")}</div>
-                    <div><strong>Roof Tags:</strong> {(firstImage.roofTags || []).join(", ")}</div>
-                    <div><strong>Project Types:</strong> {(firstImage.projectTags || []).join(", ")}</div>
-                    <div><strong>Country:</strong> {(firstImage.countryTags || []).join(", ")}</div>
-                    <div><strong>Notes:</strong> {firstImage.notes || "-"}</div>
-                  </div>
-                </div>
-              )}
-
-              {isGrouped && isExpanded && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "1rem" }}>
-                  {groupImages.map(img => (
-                    <div key={img.id} style={{ width: "220px", textAlign: "center", border: "1px solid #ccc", padding: "0.5rem", borderRadius: "8px" }}>
-                      <img
-                        src={`${BUCKET_URL}/${img.s3Key}`}
-                        alt="Uploaded"
-                        onClick={() => setSelectedImage(`${BUCKET_URL}/${img.s3Key}`)}
-                        style={{ width: "100%", borderRadius: "6px", cursor: "zoom-in" }}
-                      />
-                      <div><strong>Colors:</strong> {(img.colors || []).join(", ")}</div>
-                      <div><strong>Roof Tags:</strong> {(img.roofTags || []).join(", ")}</div>
-                      <div><strong>Project Types:</strong> {(img.projectTags || []).join(", ")}</div>
-                      <div><strong>Country:</strong> {(img.countryTags || []).join(", ")}</div>
-                      <div><strong>Notes:</strong> {img.notes || "-"}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {selectedImage && (
-        <div onClick={() => setSelectedImage(null)} style={{
+    <>
+      <div
+        style={{
           position: "fixed",
-          top: 0, left: 0, width: "100vw", height: "100vh",
-          backgroundColor: "rgba(0,0,0,0.8)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 9999, cursor: "zoom-out"
-        }}>
-          <img src={selectedImage} alt="Full view" style={{ maxWidth: "90%", maxHeight: "90%", borderRadius: "10px" }} />
+          top: 0,
+          left: 0,
+          width: "100%",
+          backgroundColor: "#09713c",
+          color: "white",
+          padding: "1rem 2rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          zIndex: 1000,
+          boxSizing: "border-box",
+        }}
+      >
+        <div style={{ width: "120px" }} />
+        <h2 style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold", textAlign: "center", flexGrow: 1 }}>Photo Gallery</h2>
+        <div>
+          <button
+            onClick={() => auth.signOut()}
+            style={{ background: "white", color: "#09713c", border: "none", padding: "0.4rem 0.8rem", borderRadius: "4px", fontWeight: "bold", cursor: "pointer" }}
+          >
+            Logout
+          </button>
         </div>
-      )}
-    </div>
+      </div>
+
+      <div style={{ marginTop: "100px", padding: "2rem" }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+          <button
+            onClick={clearAllFilters}
+            style={{ padding: "0.5rem 1rem", borderRadius: "6px", fontWeight: "bold", border: "none", backgroundColor: "#f3f3f3" }}
+          >
+            Clear Filters
+          </button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", maxWidth: "960px", margin: "0 auto" }}>
+          <Select isMulti placeholder="Filter by Product Line" options={makeOptions(OPTIONS.productLines)} value={productLineFilter} onChange={setProductLineFilter} />
+          <Select isMulti placeholder="Filter by Colors" options={makeOptions(COLOR_OPTIONS)} value={colorFilter} onChange={setColorFilter} />
+          <Select isMulti placeholder="Filter by Roof Tags" options={makeOptions(OPTIONS.roofTags)} value={roofTagFilter} onChange={setRoofTagFilter} />
+          <Select isMulti placeholder="Filter by Project Type" options={makeOptions(OPTIONS.projectTypes)} value={projectTypeFilter} onChange={setProjectTypeFilter} />
+          <Select isMulti placeholder="Filter by Country" options={makeOptions(OPTIONS.countries)} value={countryFilter} onChange={setCountryFilter} />
+          <Select placeholder="Filter by Group ID" options={allGroupIds.map(id => ({ value: id, label: id }))} value={groupFilter ? { value: groupFilter, label: groupFilter } : null} onChange={(opt) => setGroupFilter(opt ? opt.value : "")} isClearable />
+        </div>
+
+        <div style={{ marginTop: "2rem", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1.5rem" }}>
+          {paginatedGroupIds.map((groupId) => {
+            const groupImages = grouped[groupId];
+            const firstImage = groupImages[0];
+            const groupMeta = groups[groupId];
+            return (
+              <div key={groupId} style={{ border: "1px solid #ccc", borderRadius: "8px", padding: "1rem", textAlign: "center" }}>
+                <h3>{groupMeta?.groupName || groupId}</h3>
+                <p>Uploaded by: {groupMeta?.uploadedBy || "-"}<br />Created: {groupMeta?.timestamp?.toDate().toLocaleString() || "-"}</p>
+                <img
+                  src={`${BUCKET_URL}/${firstImage.s3Key}`}
+                  alt="Group Thumbnail"
+                  style={{ width: "100%", borderRadius: "6px", cursor: "pointer" }}
+                  onClick={() => setExpandedGroupId(groupId)}
+                />
+                <button onClick={() => downloadGroup(groupId)} style={{ marginTop: "0.5rem" }}>Download Group</button>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ marginTop: "2rem", textAlign: "center" }}>
+          <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>{"<< Prev"}</button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              style={{ margin: "0 5px", fontWeight: page === currentPage ? "bold" : "normal" }}
+            >
+              {page}
+            </button>
+          ))}
+          <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>{"Next >>"}</button>
+        </div>
+      </div>
+    </>
   );
 }
